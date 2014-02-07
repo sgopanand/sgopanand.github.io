@@ -3,9 +3,12 @@ Created on Feb 4, 2014
 
 @author: Gopanand S
 '''
-
+import os
 import csv
+import json
 import urllib
+import pickle
+import logging
 import datetime
 
 URL = "https://data.openjerseycity.org/storage/f/2013-12-26T19%3A36%3A22.594Z/jcpd-calls-for-service-november-2013.csv"
@@ -30,7 +33,23 @@ def map_time(hr):
 goog_map_url = 'http://maps.googleapis.com/maps/api/geocode/json?address={street}+{city}+{state}&sensor=false'
 
 def geo_locate(street, city='Jersey City', state='NJ'):
-    print goog_map_url.format(street=street, city=city, state=state)
+    try:
+        street = urllib.quote(street)
+        city = urllib.quote(city)
+        resp_obj = urllib.urlopen(goog_map_url.format(street=street, city=city, state=state))
+        res = json.load(resp_obj)
+        info=[]
+        if res.get('status') == 'OK':
+            for loc in res.get('results'):
+                info.append([loc.get('geometry').get('location'), loc.get('formatted_address')])
+            if len(info) > 1: logging.warn("Got more than one results for " + street + ", " + city + ", " + state)
+            return info
+        else:
+            logging.warn("Got a not-OK (" + res.get('status') + ") result for " + " $$$ " + street + ", " + city + ", " + state)
+    except Exception as ex:
+        print ex
+        logging.error("Unable to locate for " + street + ", " + city + ", " + state)
+        
 
 day_map = {1:'Sunday', 2:'Monday', 3:'Tuesday', 4:'Wednesday', 5:'Thursday', 6:'Friday', 7:'Saturday'}
 
@@ -40,12 +59,18 @@ def transform_data(data):
         ts = datetime.datetime.strptime(row['TR'], "%m/%d/%Y %H:%M:%S")
         row['TimeStamp'] = ts
         row['TimeOfDay'] = map_time(ts.time().hour)
-        geo_locate(row['Street'])
+        row['geolocation'] = geo_locate(row['Street'])
     return data
 
 if __name__ == '__main__':
     data = retrieve_csv()
-    transformed_data = transform_data(data)
-    print transformed_data[-1]
+    data = transform_data(data)
+    
+    fname = os.getcwd() + '/results.txt'
+    
+    with open(fname, mode='w') as op_file:
+        pickle.dump(data, op_file)
+    logging.info("Result set stored in " + fname)
+    
     
     
