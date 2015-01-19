@@ -42,7 +42,8 @@ def geo_locate(street, city='Jersey City', state='NJ'):
         if res.get('status') == 'OK':
             for loc in res.get('results'):
                 info.append([loc.get('geometry').get('location'), loc.get('formatted_address')])
-            if len(info) > 1: logging.warn("Got more than one results for " + street + ", " + city + ", " + state)
+            if len(info) > 1:
+                logging.warn("Got more than one results for " + street + ", " + city + ", " + state)
             return info
         else:
             logging.warn("Got a not-OK (" + res.get('status') + ") result for " + " $$$ " + street + ", " + city + ", " + state)
@@ -64,9 +65,9 @@ def transform_data(data):
 
 if __name__ == '__main__':
     data = retrieve_csv()
-    data = transform_data(data)
+    #data = transform_data(data)
     
-    fname = os.getcwd() + '/results.txt'
+    fname = os.getcwd() + '/results1.txt'
     
     with open(fname, mode='w') as op_file:
         pickle.dump(data, op_file)
