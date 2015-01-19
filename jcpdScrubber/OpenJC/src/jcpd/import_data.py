@@ -67,7 +67,7 @@ if __name__ == '__main__':
     data = retrieve_csv()
     #data = transform_data(data)
     
-    fname = os.getcwd() + '/results1.txt'
+    fname = os.getcwd() + '/total.txt'
     
     with open(fname, mode='w') as op_file:
         pickle.dump(data, op_file)
